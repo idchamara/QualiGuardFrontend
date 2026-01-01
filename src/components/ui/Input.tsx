@@ -12,7 +12,8 @@ export function Input({
   id,
   ...props
 }: InputProps) {
-  const inputId = id || useId();
+  const generatedId = useId();
+  const inputId = id || generatedId;
   return <div className="w-full">
       {label && <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
           {label}

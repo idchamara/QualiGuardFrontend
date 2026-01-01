@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ClipboardList, CheckCircle2, XCircle, AlertTriangle, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -8,27 +8,83 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { MOCK_METRICS, MOCK_AUDITS } from '../utils/mockData';
+import { apiService } from '../utils/api';
+import { DashboardMetrics, Audit } from '../types/audit';
 export function Dashboard() {
-  return <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [audits, setAudits] = useState<Audit[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // For now, use mock data until backend endpoints are ready
+        // const [metricsData, auditsData] = await Promise.all([
+        //   apiService.getDashboardMetrics(),
+        //   apiService.getAudits()
+        // ]);
+        // setMetrics(metricsData);
+        // setAudits(auditsData.slice(0, 5)); // Show only recent 5 audits
+
+        // Temporary: use mock data
+        setMetrics(MOCK_METRICS);
+        setAudits(MOCK_AUDITS.slice(0, 5));
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data');
+        // Fallback to mock data
+        setMetrics(MOCK_METRICS);
+        setAudits(MOCK_AUDITS.slice(0, 5));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading && !metrics) {
+    return (
+      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <div className="text-center">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error && !metrics) {
+    return (
+      <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <div className="text-center text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  const displayMetrics = metrics || MOCK_METRICS;
+  const displayAudits = audits.length > 0 ? audits : MOCK_AUDITS.slice(0, 5);
+
+  return (
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto">
       <PageHeader title="Dashboard" description="Overview of audit performance and recent activities" actions={<Link to="/audit/new">
             <Button>Create New Audit</Button>
           </Link>} />
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <MetricCard title="Total Audits" value={MOCK_METRICS.totalAudits} icon={ClipboardList} color="blue" trend={{
+        <MetricCard title="Total Audits" value={displayMetrics.totalAudits} icon={ClipboardList} color="blue" trend={{
         value: 12,
         isPositive: true
       }} />
-        <MetricCard title="Passed" value={MOCK_METRICS.passedAudits} icon={CheckCircle2} color="green" trend={{
+        <MetricCard title="Passed" value={displayMetrics.passedAudits} icon={CheckCircle2} color="green" trend={{
         value: 8,
         isPositive: true
       }} />
-        <MetricCard title="Failed" value={MOCK_METRICS.failedAudits} icon={XCircle} color="red" trend={{
+        <MetricCard title="Failed" value={displayMetrics.failedAudits} icon={XCircle} color="red" trend={{
         value: 2,
         isPositive: false
       }} />
-        <MetricCard title="Pending CAPs" value={MOCK_METRICS.pendingCAPs} icon={AlertTriangle} color="amber" />
+        <MetricCard title="Pending CAPs" value={displayMetrics.pendingCAPs} icon={AlertTriangle} color="amber" />
       </div>
 
       {/* Charts Section */}
@@ -39,7 +95,7 @@ export function Dashboard() {
           </h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={MOCK_METRICS.complianceTrend}>
+              <LineChart data={displayMetrics.complianceTrend}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{
                 fill: '#6B7280'
@@ -112,7 +168,7 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {MOCK_AUDITS.map(audit => <tr key={audit.id} className="hover:bg-gray-50 transition-colors">
+              {displayAudits.map(audit => <tr key={audit.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {audit.referenceNumber}
                   </td>
@@ -138,5 +194,6 @@ export function Dashboard() {
           </table>
         </div>
       </Card>
-    </div>;
+    </div>
+  );
 }
