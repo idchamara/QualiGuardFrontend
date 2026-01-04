@@ -1,47 +1,52 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { Sidebar } from './components/layout/Sidebar';
-import { LoginPage } from './pages/LoginPage';
-import { Dashboard } from './pages/Dashboard';
-import { AuditHistory } from './pages/AuditHistory';
-import { CreateAudit } from './pages/CreateAudit';
-import { AuditChecklist } from './pages/AuditChecklist';
-import { ReportPreview } from './pages/ReportPreview';
-function Layout({
-  children
-}: {
-  children: React.ReactNode;
-}) {
-  return <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 lg:ml-64 min-h-screen pt-16 lg:pt-0">
-        {children}
-      </main>
-    </div>;
-}
-function AppRoutes() {
-  const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
-  if (isLoginPage) {
-    return <Routes>
-        <Route path="/login" element={<LoginPage />} />
-      </Routes>;
-  }
-  return <Layout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/audits" element={<AuditHistory />} />
-        <Route path="/audit/new" element={<CreateAudit />} />
-        <Route path="/audit/:id/checklist" element={<AuditChecklist />} />
-        <Route path="/audit/:id/report" element={<ReportPreview />} />
-      </Routes>
-    </Layout>;
-}
-export function App() {
-  return <Router>
-      <AppRoutes />
-    </Router>;
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import InspectionForm from './components/InspectionForm';
+import InspectionList from './components/InspectionList';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-100">
+        <nav className="bg-white shadow-lg">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <span className="text-2xl font-bold text-blue-600">QualiGuard</span>
+              </div>
+              <div className="flex space-x-8">
+                <Link 
+                  to="/" 
+                  className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 font-medium"
+                >
+                  📊 Dashboard
+                </Link>
+                <Link 
+                  to="/inspections" 
+                  className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 font-medium"
+                >
+                  📋 Inspections
+                </Link>
+                <Link 
+                  to="/create" 
+                  className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 font-medium"
+                >
+                  ✅ Create Audit
+                </Link>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main className="py-8">
+          <Routes>
+            <Route path="/" element={<InspectionList />} />
+            <Route path="/inspections" element={<InspectionList />} />
+            <Route path="/create" element={<InspectionForm />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
+  );
 }
 
-// export default App;
+export default App;
